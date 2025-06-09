@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Bulk Message Sender</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>WhatsApp Bulk Message Sender</h1>
+            <p>Send personalized messages to multiple contacts using CSV files</p>
+        </header>
+
+        <div class="step-container">
+            <!-- Step 1: CSV File Selection -->
+            <div class="step active" id="step-1">
+                <h2>Step 1: Select CSV File</h2>
+                <div class="file-section">
+                    <button id="select-csv-btn" class="btn btn-primary">Choose CSV File</button>
+                    <div id="csv-info" class="file-info hidden">
+                        <p><strong>File:</strong> <span id="csv-filename"></span></p>
+                        <p><strong>Contacts:</strong> <span id="contact-count">0</span></p>
+                    </div>
+                </div>
+                
+                <div id="csv-preview" class="preview-section hidden">
+                    <h3>CSV Preview</h3>
+                    <div class="table-container">
+                        <table id="contacts-table">
+                            <thead id="table-head"></thead>
+                            <tbody id="table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="csv-format-help">
+                    <h3>CSV Format Requirements</h3>
+                    <p>Your CSV file should contain at least a phone number column. Supported column names:</p>
+                    <ul>
+                        <li><strong>Phone:</strong> phone, number, mobile, phone_number, contact, whatsapp</li>
+                        <li><strong>Name:</strong> name, first_name, full_name (optional)</li>
+                        <li><strong>Other:</strong> Any additional columns for message personalization</li>
+                    </ul>
+                    <p><strong>Example CSV:</strong></p>
+                    <pre>name,phone,company
+John Doe,9876543210,ABC Corp
+Jane Smith,9876543211,XYZ Ltd</pre>
+                </div>
+            </div>
+
+            <!-- Step 2: Message Template -->
+            <div class="step" id="step-2">
+                <h2>Step 2: Create Message Template</h2>
+                <div class="message-section">
+                    <label for="message-template">Message Template:</label>
+                    <textarea id="message-template" rows="6" placeholder="Hi {{name}}, this is a personalized message from {{company}}.
+
+You can use placeholders like {{name}}, {{phone}}, or any column from your CSV file.
+
+Best regards,
+Team"></textarea>
+                    
+                    <div class="template-help">
+                        <h3>Available Placeholders</h3>
+                        <div id="available-placeholders">
+                            <p>Upload a CSV file to see available placeholders</p>
+                        </div>
+                    </div>
+
+                    <div class="message-preview">
+                        <h3>Message Preview</h3>
+                        <div id="message-preview-content">
+                            <p>Select a contact from the table above to preview the personalized message</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: WhatsApp Connection -->
+            <div class="step" id="step-3">
+                <h2>Step 3: Connect to WhatsApp</h2>
+                <div class="whatsapp-section">
+                    <button id="connect-whatsapp-btn" class="btn btn-primary">Connect to WhatsApp</button>
+                    
+                    <div id="qr-section" class="qr-section hidden">
+                        <h3>Scan QR Code with WhatsApp</h3>
+                        <div id="qr-code-container">
+                            <img id="qr-code" alt="QR Code" />
+                        </div>
+                        <p>Open WhatsApp on your phone, go to Settings > WhatsApp Web/Desktop, and scan this QR code</p>
+                    </div>
+
+                    <div id="connection-status" class="status-section">
+                        <p id="status-message">Not connected</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Send Messages -->
+            <div class="step" id="step-4">
+                <h2>Step 4: Send Messages</h2>
+                <div class="send-section">
+                    <div class="send-options">
+                        <label for="message-delay">Delay between messages (seconds):</label>
+                        <input type="number" id="message-delay" value="5" min="1" max="60">
+                        <small>Recommended: 3-5 seconds to avoid rate limiting</small>
+                    </div>
+
+                    <button id="send-messages-btn" class="btn btn-success" disabled>Send All Messages</button>
+                    
+                    <div id="progress-section" class="progress-section hidden">
+                        <h3>Sending Progress</h3>
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill"></div>
+                        </div>
+                        <p id="progress-text">0 / 0 messages sent</p>
+                        
+                        <div id="progress-log" class="progress-log"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <button id="prev-btn" class="btn btn-secondary" disabled>Previous</button>
+            <button id="next-btn" class="btn btn-primary" disabled>Next</button>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>

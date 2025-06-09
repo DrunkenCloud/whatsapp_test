@@ -1,0 +1,22 @@
+# Node modules
+node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+
+# Auth and cache for whatsapp-web.js
+.wwebjs_auth/
+.wwebjs_cache/
+
+dist/
