@@ -472,3 +472,61 @@ textarea:focus {
         padding: 8px;
     }
 }
+
+/* Setup Section */
+.setup-section {
+    margin-bottom: 30px;
+}
+
+.chrome-path-section {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.chrome-path-section label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.path-input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.path-input-group input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 2px solid #dee2e6;
+    border-radius: 4px;
+}
+
+.help-text {
+    display: block;
+    color: #6c757d;
+    margin: 10px 0;
+}
+
+.path-examples {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+.path-examples li {
+    margin: 5px 0;
+    padding-left: 20px;
+    position: relative;
+}
+
+.path-examples li:before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: #6c757d;
+}

@@ -16,7 +16,22 @@
         <div class="step-container">
             <!-- Step 1: CSV File Selection -->
             <div class="step active" id="step-1">
-                <h2>Step 1: Select CSV File</h2>
+                <h2>Step 1: Setup</h2>
+                <div class="setup-section">
+                    <div class="chrome-path-section">
+                        <label for="chrome-path">Chrome/Chromium Path:</label>
+                        <div class="path-input-group">
+                            <input type="text" id="chrome-path" placeholder="e.g., /usr/bin/google-chrome" />
+                            <button id="browse-chrome-btn" class="btn btn-secondary">Browse</button>
+                        </div>
+                        <small class="help-text">Enter the path to your Chrome/Chromium executable. Common paths:</small>
+                        <ul class="path-examples">
+                            <li>Linux: /usr/bin/google-chrome</li>
+                            <li>Windows: C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe</li>
+                            <li>macOS: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome</li>
+                        </ul>
+                    </div>
+                </div>
                 <div class="file-section">
                     <button id="select-csv-btn" class="btn btn-primary">Choose CSV File</button>
                     <div id="csv-info" class="file-info hidden">

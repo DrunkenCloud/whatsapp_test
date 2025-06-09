@@ -10,6 +10,8 @@ let isWhatsAppConnected = false;
 const steps = document.querySelectorAll('.step');
 const prevBtn = document.getElementById('prev-btn');
 const nextBtn = document.getElementById('next-btn');
+const chromePathInput = document.getElementById('chrome-path');
+const browseChromeBtn = document.getElementById('browse-chrome-btn');
 const selectCsvBtn = document.getElementById('select-csv-btn');
 const csvInfo = document.getElementById('csv-info');
 const csvFilename = document.getElementById('csv-filename');
@@ -59,6 +61,19 @@ function setupEventListeners() {
         }
     });
 
+    // Chrome path browsing
+    browseChromeBtn.addEventListener('click', async () => {
+        try {
+            const result = await ipcRenderer.invoke('select-chrome-path');
+            if (result) {
+                chromePathInput.value = result;
+            }
+        } catch (error) {
+            console.error('Error selecting Chrome path:', error);
+            alert('Error selecting Chrome path: ' + error.message);
+        }
+    });
+
     // CSV File Selection
     selectCsvBtn.addEventListener('click', async () => {
         try {
@@ -78,11 +93,17 @@ function setupEventListeners() {
     // WhatsApp connection
     connectWhatsappBtn.addEventListener('click', async () => {
         try {
+            const chromePath = chromePathInput.value.trim();
+            if (!chromePath) {
+                alert('Please enter the Chrome/Chromium path first');
+                return;
+            }
+
             connectWhatsappBtn.disabled = true;
             connectWhatsappBtn.innerHTML = '<span class="loading"></span>Connecting...';
             updateConnectionStatus('Initializing WhatsApp connection...', 'connecting');
             
-            await ipcRenderer.invoke('initialize-whatsapp');
+            await ipcRenderer.invoke('initialize-whatsapp', chromePath);
         } catch (error) {
             console.error('Error connecting to WhatsApp:', error);
             updateConnectionStatus('Connection failed: ' + error.message, 'error');

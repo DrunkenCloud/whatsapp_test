@@ -25,7 +25,7 @@
   "dependencies": {
     "csv-parser": "^3.0.0",
     "fs-extra": "^11.1.1",
-    "puppeteer": "^21.11.0",
+    "puppeteer": "^24.10.0",
     "qrcode": "^1.5.3",
     "whatsapp-web.js": "^1.23.0"
   },
@@ -40,7 +40,17 @@
       "renderer.js",
       "index.html",
       "styles.css",
-      "node_modules/**/*"
+      "node_modules/**/*",
+      "!node_modules/puppeteer/.local-chromium/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "node_modules/puppeteer/.local-chromium",
+        "to": ".local-chromium",
+        "filter": [
+          "**/*"
+        ]
+      }
     ],
     "mac": {
       "category": "public.app-category.productivity"
@@ -49,7 +59,8 @@
       "target": "nsis"
     },
     "linux": {
-      "target": "AppImage"
+      "target": "AppImage",
+      "category": "Utility"
     }
   }
 }

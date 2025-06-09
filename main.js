@@ -89,12 +89,17 @@ ipcMain.handle('read-csv-file', async (event, filePath) => {
   }
 });
 
-ipcMain.handle('initialize-whatsapp', async () => {
+ipcMain.handle('initialize-whatsapp', async (event, chromePath) => {
   try {
+    if (!chromePath) {
+      throw new Error('Chrome path is required');
+    }
+
     whatsappClient = new Client({
       authStrategy: new LocalAuth(),
       puppeteer: {
         headless: true,
+        executablePath: chromePath,
         args: ['--no-sandbox', '--disable-setuid-sandbox']
       }
     });
@@ -229,4 +234,19 @@ ipcMain.handle('disconnect-whatsapp', async () => {
     whatsappClient = null;
   }
   return true;
+});
+
+ipcMain.handle('select-chrome-path', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openFile'],
+    filters: [
+      { name: 'Chrome Executable', extensions: ['exe', 'app', ''] },
+      { name: 'All Files', extensions: ['*'] }
+    ]
+  });
+
+  if (!result.canceled && result.filePaths.length > 0) {
+    return result.filePaths[0];
+  }
+  return null;
 });
