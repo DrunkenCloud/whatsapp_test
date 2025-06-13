@@ -100,7 +100,14 @@ ipcMain.handle('initialize-whatsapp', async (event, chromePath) => {
       puppeteer: {
         headless: true,
         executablePath: chromePath,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--incognito',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--disable-software-rasterizer'
+        ]
       }
     });
 
@@ -125,18 +132,44 @@ ipcMain.handle('initialize-whatsapp', async (event, chromePath) => {
         mainWindow.webContents.send('whatsapp-authenticated');
       });
 
-      whatsappClient.on('auth_failure', (msg) => {
+      whatsappClient.on('auth_failure', async (msg) => {
         console.error('Authentication failed:', msg);
         mainWindow.webContents.send('whatsapp-auth-failed', msg);
+        try {
+          await whatsappClient.destroy();
+          whatsappClient = null;
+        } catch (error) {
+          console.error('Error cleaning up session:', error);
+        }
         reject(new Error('Authentication failed'));
       });
 
-      whatsappClient.on('disconnected', (reason) => {
+      whatsappClient.on('disconnected', async (reason) => {
         console.log('WhatsApp client disconnected:', reason);
         mainWindow.webContents.send('whatsapp-disconnected', reason);
+        try {
+          await whatsappClient.destroy();
+          whatsappClient = null;
+        } catch (error) {
+          console.error('Error cleaning up session:', error);
+        }
       });
 
-      whatsappClient.initialize();
+      whatsappClient.on('error', async (error) => {
+        console.error('WhatsApp client error:', error);
+        mainWindow.webContents.send('whatsapp-error', error.message);
+        try {
+          await whatsappClient.destroy();
+          whatsappClient = null;
+        } catch (err) {
+          console.error('Error cleaning up session:', err);
+        }
+      });
+
+      whatsappClient.initialize().catch(error => {
+        console.error('Failed to initialize WhatsApp client:', error);
+        reject(error);
+      });
     });
   } catch (error) {
     throw new Error(`Failed to initialize WhatsApp: ${error.message}`);
