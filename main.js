@@ -104,7 +104,6 @@ ipcMain.handle('initialize-whatsapp', async (event, chromePath) => {
           '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
-          '--incognito',
           '--disable-gpu',
           '--disable-software-rasterizer'
         ]
@@ -211,6 +210,9 @@ ipcMain.handle('send-bulk-messages', async (event, { contacts, templates, delayR
       if (!phoneNumber) {
         throw new Error('Phone number not found in contact data');
       }
+
+      // Check network connectivity before sending
+      await waitForNetworkConnectivity();
 
       // Split by ';' and take the first element, then clean it
       phoneNumber = phoneNumber.split(';')[0].trim();
@@ -355,4 +357,36 @@ ipcMain.handle('read-template-folder', async (event, folderPath) => {
 // Helper function to get random number between min and max
 function getRandomDelay(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// Helper function to check network connectivity
+async function checkNetworkConnectivity() {
+  try {
+    const https = require('https');
+    return new Promise((resolve) => {
+      const req = https.get('https://google.com', (res) => {
+        resolve(true);
+      });
+      
+      req.on('error', () => {
+        resolve(false);
+      });
+      
+      req.setTimeout(5000, () => {
+        req.destroy();
+        resolve(false);
+      });
+    });
+  } catch (error) {
+    return false;
+  }
+}
+
+// Helper function to wait for network connectivity
+async function waitForNetworkConnectivity() {
+  while (!(await checkNetworkConnectivity())) {
+    console.log('No internet connection. Waiting 10 seconds...');
+    await new Promise(resolve => setTimeout(resolve, 10000));
+  }
+  console.log('Internet connection restored');
 }
