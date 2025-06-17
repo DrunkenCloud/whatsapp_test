@@ -104,6 +104,7 @@ ipcMain.handle('initialize-whatsapp', async (event, chromePath) => {
           '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
+          '--incognito',
           '--disable-gpu',
           '--disable-software-rasterizer'
         ]
