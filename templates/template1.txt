@@ -1,0 +1,6 @@
+Hi {{name}},
+
+Hope you're doing well! I wanted to reach out from {{company}} to see how things are going.
+
+Best regards,
+Team 

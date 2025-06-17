@@ -67,16 +67,24 @@ Jane Smith,9876543211,XYZ Ltd</pre>
 
             <!-- Step 2: Message Template -->
             <div class="step" id="step-2">
-                <h2>Step 2: Create Message Template</h2>
+                <h2>Step 2: Message Templates</h2>
                 <div class="message-section">
-                    <label for="message-template">Message Template:</label>
-                    <textarea id="message-template" rows="6" placeholder="Hi {{name}}, this is a personalized message from {{company}}.
+                    <div class="template-folder-section">
+                        <label for="template-folder">Template Folder:</label>
+                        <div class="folder-input-group">
+                            <input type="text" id="template-folder" placeholder="Select a folder containing .txt template files" readonly />
+                            <button id="select-template-folder-btn" class="btn btn-secondary">Browse</button>
+                        </div>
+                        <small class="help-text">Select a folder containing .txt files. Each file will be used as a template and randomly selected for each message.</small>
+                    </div>
 
-You can use placeholders like {{name}}, {{phone}}, or any column from your CSV file.
+                    <div id="template-info" class="template-info hidden">
+                        <h3>Available Templates</h3>
+                        <div id="template-list" class="template-list">
+                            <!-- Templates will be listed here -->
+                        </div>
+                    </div>
 
-Best regards,
-Team"></textarea>
-                    
                     <div class="template-help">
                         <h3>Available Placeholders</h3>
                         <div id="available-placeholders">
@@ -118,9 +126,31 @@ Team"></textarea>
                 <h2>Step 4: Send Messages</h2>
                 <div class="send-section">
                     <div class="send-options">
-                        <label for="message-delay">Delay between messages (seconds):</label>
-                        <input type="number" id="message-delay" value="5" min="1" max="60">
-                        <small>Recommended: 3-5 seconds to avoid rate limiting</small>
+                        <div class="delay-config">
+                            <h3>Delay Configuration</h3>
+                            
+                            <div class="delay-range">
+                                <label for="delay-min">Delay between messages (seconds):</label>
+                                <div class="range-inputs">
+                                    <input type="number" id="delay-min" value="5" min="1" max="60" placeholder="Min">
+                                    <span>to</span>
+                                    <input type="number" id="delay-max" value="10" min="1" max="60" placeholder="Max">
+                                </div>
+                                <small>Random delay will be chosen between min and max values</small>
+                            </div>
+
+                            <div class="break-config">
+                                <label for="break-after">Take a break after every:</label>
+                                <div class="break-inputs">
+                                    <input type="number" id="break-after" value="10" min="1" max="100" placeholder="Messages">
+                                    <span>messages for</span>
+                                    <input type="number" id="break-min" value="30" min="5" max="300" placeholder="Min seconds">
+                                    <span>to</span>
+                                    <input type="number" id="break-max" value="60" min="5" max="300" placeholder="Max seconds">
+                                </div>
+                                <small>Optional: Take a longer break periodically to avoid rate limiting</small>
+                            </div>
+                        </div>
                     </div>
 
                     <button id="send-messages-btn" class="btn btn-success" disabled>Send All Messages</button>

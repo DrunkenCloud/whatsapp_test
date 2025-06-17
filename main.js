@@ -176,7 +176,23 @@ ipcMain.handle('initialize-whatsapp', async (event, chromePath) => {
   }
 });
 
-ipcMain.handle('send-bulk-messages', async (event, { contacts, message, delay }) => {
+// ph: +1-223-223-223    => 1223223223
+// ph: 123 456 7890      => 1234567890
+// +91 (987) 654-3210    => 919876543210
+// 9876543210            => 9876543210
+
+function cleanPhoneNumber(input) {
+  const match = input.match(/ph:\s*([+0-9\-()\s]+)/i);
+  let raw = match ? match[1] : input;
+
+  raw = raw.trim();
+
+  // Remove all non-digit characters
+  return raw.replace(/\D/g, '');
+}
+
+
+ipcMain.handle('send-bulk-messages', async (event, { contacts, templates, delayRange, breakAfter, breakRange }) => {
   if (!whatsappClient) {
     throw new Error('WhatsApp client not initialized');
   }
@@ -197,18 +213,22 @@ ipcMain.handle('send-bulk-messages', async (event, { contacts, message, delay })
       }
 
       // Clean and format phone number
-      phoneNumber = phoneNumber.replace(/\D/g, ''); // Remove non-digits
-      
-      // Add country code if not present (assuming default country code)
-      if (!phoneNumber.startsWith('91') && phoneNumber.length === 10) {
-        phoneNumber = '91' + phoneNumber; // Adjust country code as needed
+      phoneNumber = cleanPhoneNumber(phoneNumber);
+
+      // Format for WhatsApp (remove any + symbol if present)
+      const chatId = phoneNumber.replace(/^\+/, '') + '@c.us';
+
+      // Select random template if templates are provided
+      let selectedTemplate;
+      if (templates && templates.length > 0) {
+        const randomIndex = Math.floor(Math.random() * templates.length);
+        selectedTemplate = templates[randomIndex].content;
+      } else {
+        throw new Error('No templates available');
       }
 
-      // Format for WhatsApp
-      const chatId = phoneNumber + '@c.us';
-
       // Replace placeholders in message
-      let personalizedMessage = message;
+      let personalizedMessage = selectedTemplate;
       Object.keys(contact).forEach(key => {
         const placeholder = `{{${key}}}`;
         personalizedMessage = personalizedMessage.replace(
@@ -234,9 +254,20 @@ ipcMain.handle('send-bulk-messages', async (event, { contacts, message, delay })
         status: 'success'
       });
 
-      // Wait for specified delay
-      if (delay > 0 && i < contacts.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, delay * 1000));
+      // Wait for random delay within the specified range
+      if (delayRange && delayRange.min > 0 && delayRange.max > 0 && i < contacts.length - 1) {
+        const randomDelay = getRandomDelay(delayRange.min, delayRange.max);
+        await new Promise(resolve => setTimeout(resolve, randomDelay * 1000));
+      }
+
+      // Check if we need to take a break after certain number of messages
+      if (breakAfter && breakRange && (i + 1) % breakAfter === 0 && i < contacts.length - 1) {
+        const breakDelay = getRandomDelay(breakRange.min, breakRange.max);
+        mainWindow.webContents.send('break-notification', {
+          message: `Taking a break for ${breakDelay} seconds after ${breakAfter} messages...`,
+          duration: breakDelay
+        });
+        await new Promise(resolve => setTimeout(resolve, breakDelay * 1000));
       }
 
     } catch (error) {
@@ -283,3 +314,44 @@ ipcMain.handle('select-chrome-path', async () => {
   }
   return null;
 });
+
+// New IPC handler for template folder selection
+ipcMain.handle('select-template-folder', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openDirectory'],
+    title: 'Select Template Folder'
+  });
+
+  if (!result.canceled && result.filePaths.length > 0) {
+    return result.filePaths[0];
+  }
+  return null;
+});
+
+// New IPC handler to read template files from folder
+ipcMain.handle('read-template-folder', async (event, folderPath) => {
+  try {
+    const templates = [];
+    const files = await fs.readdir(folderPath);
+    
+    for (const file of files) {
+      if (file.endsWith('.txt')) {
+        const filePath = path.join(folderPath, file);
+        const content = await fs.readFile(filePath, 'utf8');
+        templates.push({
+          name: file.replace('.txt', ''),
+          content: content.trim()
+        });
+      }
+    }
+    
+    return templates;
+  } catch (error) {
+    throw new Error(`Failed to read template folder: ${error.message}`);
+  }
+});
+
+// Helper function to get random number between min and max
+function getRandomDelay(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}

@@ -1,0 +1,8 @@
+Hello {{name}},
+
+Just checking in to see if you received our previous message about {{company}}.
+
+Looking forward to hearing from you!
+
+Thanks,
+Team 

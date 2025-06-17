@@ -530,3 +530,125 @@ textarea:focus {
     left: 0;
     color: #6c757d;
 }
+
+/* Template Folder Section */
+.template-folder-section {
+    margin-bottom: 20px;
+}
+
+.folder-input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.folder-input-group input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 2px solid #dee2e6;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+}
+
+.template-info {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.template-info h3 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.template-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.template-item {
+    padding: 15px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.template-item:hover {
+    border-color: #25D366;
+}
+
+.template-item strong {
+    display: block;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.template-preview {
+    color: #6c757d;
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+/* Delay Configuration */
+.delay-config {
+    margin-bottom: 30px;
+}
+
+.delay-config h3 {
+    color: #333;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #25D366;
+    padding-bottom: 10px;
+}
+
+.delay-range, .break-config {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.delay-range label, .break-config label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #333;
+}
+
+.range-inputs, .break-inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.range-inputs input, .break-inputs input {
+    padding: 8px 12px;
+    border: 2px solid #dee2e6;
+    border-radius: 4px;
+    width: 80px;
+    text-align: center;
+}
+
+.range-inputs span, .break-inputs span {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.delay-range small, .break-config small {
+    display: block;
+    color: #6c757d;
+    font-size: 0.85em;
+}
+
+/* Break notification in progress log */
+.log-entry.break {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    color: #856404;
+    font-weight: 500;
+}

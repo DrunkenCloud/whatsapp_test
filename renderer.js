@@ -2,6 +2,7 @@ const { ipcRenderer } = require('electron');
 
 // Global variables
 let contacts = [];
+let templates = [];
 let currentStep = 1;
 let selectedContact = null;
 let isWhatsAppConnected = false;
@@ -20,7 +21,10 @@ const csvPreview = document.getElementById('csv-preview');
 const contactsTable = document.getElementById('contacts-table');
 const tableHead = document.getElementById('table-head');
 const tableBody = document.getElementById('table-body');
-const messageTemplate = document.getElementById('message-template');
+const templateFolderInput = document.getElementById('template-folder');
+const selectTemplateFolderBtn = document.getElementById('select-template-folder-btn');
+const templateInfo = document.getElementById('template-info');
+const templateList = document.getElementById('template-list');
 const availablePlaceholders = document.getElementById('available-placeholders');
 const messagePreviewContent = document.getElementById('message-preview-content');
 const connectWhatsappBtn = document.getElementById('connect-whatsapp-btn');
@@ -29,7 +33,11 @@ const qrCode = document.getElementById('qr-code');
 const connectionStatus = document.getElementById('connection-status');
 const statusMessage = document.getElementById('status-message');
 const sendMessagesBtn = document.getElementById('send-messages-btn');
-const messageDelay = document.getElementById('message-delay');
+const delayMin = document.getElementById('delay-min');
+const delayMax = document.getElementById('delay-max');
+const breakAfter = document.getElementById('break-after');
+const breakMin = document.getElementById('break-min');
+const breakMax = document.getElementById('break-max');
 const progressSection = document.getElementById('progress-section');
 const progressFill = document.getElementById('progress-fill');
 const progressText = document.getElementById('progress-text');
@@ -87,8 +95,21 @@ function setupEventListeners() {
         }
     });
 
+    // Template folder selection
+    selectTemplateFolderBtn.addEventListener('click', async () => {
+        try {
+            const folderPath = await ipcRenderer.invoke('select-template-folder');
+            if (folderPath) {
+                await loadTemplateFolder(folderPath);
+            }
+        } catch (error) {
+            console.error('Error selecting template folder:', error);
+            alert('Error selecting template folder: ' + error.message);
+        }
+    });
+
     // Message template changes
-    messageTemplate.addEventListener('input', updateMessagePreview);
+    // Removed since we're now using template folders
 
     // WhatsApp connection
     connectWhatsappBtn.addEventListener('click', async () => {
@@ -119,8 +140,8 @@ function setupEventListeners() {
             return;
         }
 
-        if (!messageTemplate.value.trim()) {
-            alert('Please enter a message template.');
+        if (!templates.length) {
+            alert('Please select a template folder with .txt files.');
             return;
         }
 
@@ -129,10 +150,21 @@ function setupEventListeners() {
             return;
         }
 
-        const delay = parseInt(messageDelay.value) || 5;
+        const delayRange = {
+            min: parseInt(delayMin.value) || 5,
+            max: parseInt(delayMax.value) || 10
+        };
+
+        const breakConfig = {
+            after: parseInt(breakAfter.value) || 10,
+            range: {
+                min: parseInt(breakMin.value) || 30,
+                max: parseInt(breakMax.value) || 60
+            }
+        };
         
-        if (confirm(`Send messages to ${contacts.length} contacts with ${delay} second delay between messages?`)) {
-            await sendBulkMessages(delay);
+        if (confirm(`Send messages to ${contacts.length} contacts with random delays between ${delayRange.min}-${delayRange.max} seconds?`)) {
+            await sendBulkMessages(delayRange, breakConfig);
         }
     });
 }
@@ -154,7 +186,7 @@ function updateNavigation() {
             nextBtn.disabled = contacts.length === 0;
             break;
         case 2:
-            nextBtn.disabled = !messageTemplate.value.trim();
+            nextBtn.disabled = templates.length === 0;
             break;
         case 3:
             nextBtn.disabled = !isWhatsAppConnected;
@@ -280,17 +312,20 @@ function updateAvailablePlaceholders() {
 }
 
 function updateMessagePreview() {
-    if (messageTemplate.value.trim() !== '') {
+    if (templates.length > 0) {
         nextBtn.disabled = false;
     } else {
         nextBtn.disabled = true;
     }
-    if (!selectedContact || !messageTemplate.value) {
+    
+    if (!selectedContact || templates.length === 0) {
         messagePreviewContent.innerHTML = '<p>Select a contact from the table above to preview the personalized message</p>';
         return;
     }
 
-    let preview = messageTemplate.value;
+    // Use a random template for preview
+    const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
+    let preview = randomTemplate.content;
     
     // Replace placeholders
     Object.keys(selectedContact).forEach(key => {
@@ -349,7 +384,7 @@ ipcRenderer.on('whatsapp-disconnected', (event, reason) => {
 });
 
 // Message Sending
-async function sendBulkMessages(delay) {
+async function sendBulkMessages(delayRange, breakConfig) {
     try {
         sendMessagesBtn.disabled = true;
         sendMessagesBtn.innerHTML = '<span class="loading"></span>Sending Messages...';
@@ -358,8 +393,10 @@ async function sendBulkMessages(delay) {
 
         const results = await ipcRenderer.invoke('send-bulk-messages', {
             contacts: contacts,
-            message: messageTemplate.value,
-            delay: delay
+            templates: templates,
+            delayRange: delayRange,
+            breakAfter: breakConfig.after,
+            breakRange: breakConfig.range
         });
 
         // Show completion message
@@ -376,6 +413,15 @@ async function sendBulkMessages(delay) {
         sendMessagesBtn.textContent = 'Send All Messages';
     }
 }
+
+// Break notification handler
+ipcRenderer.on('break-notification', (event, data) => {
+    const logEntry = document.createElement('div');
+    logEntry.className = 'log-entry break';
+    logEntry.textContent = `⏸️ ${data.message}`;
+    progressLog.appendChild(logEntry);
+    progressLog.scrollTop = progressLog.scrollHeight;
+});
 
 // Progress Updates
 ipcRenderer.on('message-progress', (event, data) => {
@@ -409,3 +455,31 @@ window.addEventListener('beforeunload', async () => {
         await ipcRenderer.invoke('disconnect-whatsapp');
     }
 });
+
+// Load template folder
+async function loadTemplateFolder(folderPath) {
+    try {
+        templates = await ipcRenderer.invoke('read-template-folder', folderPath);
+        templateFolderInput.value = folderPath;
+        templateInfo.classList.remove('hidden');
+        
+        // Display templates
+        templateList.innerHTML = '';
+        templates.forEach(template => {
+            const templateItem = document.createElement('div');
+            templateItem.className = 'template-item';
+            templateItem.innerHTML = `
+                <strong>${template.name}</strong>
+                <div class="template-preview">${template.content.substring(0, 100)}${template.content.length > 100 ? '...' : ''}</div>
+            `;
+            templateList.appendChild(templateItem);
+        });
+        
+        updateNavigation();
+        updateMessagePreview();
+        
+    } catch (error) {
+        console.error('Error loading template folder:', error);
+        alert('Error loading template folder: ' + error.message);
+    }
+}
