@@ -103,7 +103,6 @@ ipcMain.handle('initialize-whatsapp', async (event, chromePath) => {
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
-          '--incognito',
           '--disable-dev-shm-usage',
           '--disable-gpu',
           '--disable-software-rasterizer'
@@ -212,7 +211,8 @@ ipcMain.handle('send-bulk-messages', async (event, { contacts, templates, delayR
         throw new Error('Phone number not found in contact data');
       }
 
-      // Clean and format phone number
+      // Split by ';' and take the first element, then clean it
+      phoneNumber = phoneNumber.split(';')[0].trim();
       phoneNumber = cleanPhoneNumber(phoneNumber);
 
       // Format for WhatsApp (remove any + symbol if present)
