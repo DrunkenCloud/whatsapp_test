@@ -4,6 +4,7 @@ const fs = require('fs-extra');
 const csv = require('csv-parser');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
+const { MessageMedia } = require('whatsapp-web.js');
 
 let mainWindow;
 let whatsappClient;
@@ -105,9 +106,9 @@ ipcMain.handle('initialize-whatsapp', async (event, chromePath) => {
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
-          '--incognito',
           '--disable-dev-shm-usage',
           '--disable-gpu',
+          '--incognito',
           '--disable-software-rasterizer'
         ]
       }
@@ -228,16 +229,16 @@ ipcMain.handle('send-bulk-messages', async (event, { contacts, templates, delayR
       const chatId = phoneNumber.replace(/^\+/, '') + '@c.us';
 
       // Select random template if templates are provided
-      let selectedTemplate;
+      let selectedTemplateObj;
       if (templates && templates.length > 0) {
         const randomIndex = Math.floor(Math.random() * templates.length);
-        selectedTemplate = templates[randomIndex].content;
+        selectedTemplateObj = templates[randomIndex];
       } else {
         throw new Error('No templates available');
       }
 
       // Replace placeholders in message
-      let personalizedMessage = selectedTemplate;
+      let personalizedMessage = selectedTemplateObj.content;
       Object.keys(contact).forEach(key => {
         const placeholder = `{{${key}}}`;
         personalizedMessage = personalizedMessage.replace(
@@ -288,8 +289,13 @@ ipcMain.handle('send-bulk-messages', async (event, { contacts, templates, delayR
         await new Promise(resolve => setTimeout(resolve, 10000));
       }
 
-      // Send message
-      await whatsappClient.sendMessage(chatId, personalizedMessage);
+      // Send message (with image if available)
+      if (selectedTemplateObj.imagePath) {
+        const media = await MessageMedia.fromFilePath(selectedTemplateObj.imagePath);
+        await whatsappClient.sendMessage(chatId, media, { caption: personalizedMessage });
+      } else {
+        await whatsappClient.sendMessage(chatId, personalizedMessage);
+      }
       
       results.push({
         contact: contact,
@@ -384,14 +390,25 @@ ipcMain.handle('read-template-folder', async (event, folderPath) => {
   try {
     const templates = [];
     const files = await fs.readdir(folderPath);
+    const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif'];
     
     for (const file of files) {
       if (file.endsWith('.txt')) {
         const filePath = path.join(folderPath, file);
         const content = await fs.readFile(filePath, 'utf8');
+        const baseName = file.replace('.txt', '');
+        let imagePath = null;
+        for (const ext of imageExtensions) {
+          const candidate = path.join(folderPath, baseName + ext);
+          if (await fs.pathExists(candidate)) {
+            imagePath = candidate;
+            break;
+          }
+        }
         templates.push({
-          name: file.replace('.txt', ''),
-          content: content.trim()
+          name: baseName,
+          content: content.trim(),
+          imagePath: imagePath
         });
       }
     }

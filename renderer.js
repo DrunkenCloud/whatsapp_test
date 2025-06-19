@@ -507,6 +507,7 @@ async function loadTemplateFolder(folderPath) {
             templateItem.innerHTML = `
                 <strong>${template.name}</strong>
                 <div class="template-preview">${template.content.substring(0, 100)}${template.content.length > 100 ? '...' : ''}</div>
+                ${template.imagePath ? `<img src="file://${template.imagePath}" alt="Image for ${template.name}" style="max-width: 100px; max-height: 100px; margin-top: 8px; border-radius: 6px; border: 1px solid #ccc;" />` : ''}
             `;
             templateList.appendChild(templateItem);
         });
