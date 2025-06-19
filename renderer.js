@@ -42,6 +42,9 @@ const progressSection = document.getElementById('progress-section');
 const progressFill = document.getElementById('progress-fill');
 const progressText = document.getElementById('progress-text');
 const progressLog = document.getElementById('progress-log');
+const pauseMessagesBtn = document.getElementById('pause-messages-btn');
+const resumeMessagesBtn = document.getElementById('resume-messages-btn');
+const stopMessagesBtn = document.getElementById('stop-messages-btn');
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', () => {
@@ -166,6 +169,25 @@ function setupEventListeners() {
         if (confirm(`Send messages to ${contacts.length} contacts with random delays between ${delayRange.min}-${delayRange.max} seconds?`)) {
             await sendBulkMessages(delayRange, breakConfig);
         }
+    });
+
+    pauseMessagesBtn.addEventListener('click', async () => {
+        await ipcRenderer.invoke('pause-sending');
+        pauseMessagesBtn.style.display = 'none';
+        resumeMessagesBtn.style.display = 'inline-block';
+    });
+
+    resumeMessagesBtn.addEventListener('click', async () => {
+        await ipcRenderer.invoke('resume-sending');
+        resumeMessagesBtn.style.display = 'none';
+        pauseMessagesBtn.style.display = 'inline-block';
+    });
+
+    stopMessagesBtn.addEventListener('click', async () => {
+        await ipcRenderer.invoke('stop-sending');
+        stopMessagesBtn.disabled = true;
+        pauseMessagesBtn.disabled = true;
+        resumeMessagesBtn.disabled = true;
     });
 }
 
@@ -387,7 +409,13 @@ ipcRenderer.on('whatsapp-disconnected', (event, reason) => {
 async function sendBulkMessages(delayRange, breakConfig) {
     try {
         sendMessagesBtn.disabled = true;
-        sendMessagesBtn.innerHTML = '<span class="loading"></span>Sending Messages...';
+        sendMessagesBtn.style.display = 'none';
+        pauseMessagesBtn.style.display = 'inline-block';
+        pauseMessagesBtn.disabled = false;
+        resumeMessagesBtn.style.display = 'none';
+        resumeMessagesBtn.disabled = false;
+        stopMessagesBtn.style.display = 'inline-block';
+        stopMessagesBtn.disabled = false;
         progressSection.classList.remove('hidden');
         progressLog.innerHTML = '';
 
@@ -402,15 +430,23 @@ async function sendBulkMessages(delayRange, breakConfig) {
         // Show completion message
         const successCount = results.filter(r => r.status === 'success').length;
         const failureCount = results.filter(r => r.status === 'failed').length;
-        
-        alert(`Message sending completed!\nSuccess: ${successCount}\nFailed: ${failureCount}`);
+        const stoppedCount = results.filter(r => r.status === 'stopped').length;
+        let msg = `Message sending completed!\nSuccess: ${successCount}\nFailed: ${failureCount}`;
+        if (stoppedCount > 0) msg += `\nStopped: ${stoppedCount}`;
+        alert(msg);
 
     } catch (error) {
         console.error('Error sending messages:', error);
         alert('Error sending messages: ' + error.message);
     } finally {
         sendMessagesBtn.disabled = false;
-        sendMessagesBtn.textContent = 'Send All Messages';
+        sendMessagesBtn.style.display = 'inline-block';
+        pauseMessagesBtn.style.display = 'none';
+        resumeMessagesBtn.style.display = 'none';
+        stopMessagesBtn.style.display = 'none';
+        pauseMessagesBtn.disabled = false;
+        resumeMessagesBtn.disabled = false;
+        stopMessagesBtn.disabled = false;
     }
 }
 

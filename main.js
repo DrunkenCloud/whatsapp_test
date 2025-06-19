@@ -7,6 +7,8 @@ const qrcode = require('qrcode');
 
 let mainWindow;
 let whatsappClient;
+let isPaused = false;
+let isStopped = false;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -103,8 +105,8 @@ ipcMain.handle('initialize-whatsapp', async (event, chromePath) => {
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
           '--incognito',
+          '--disable-dev-shm-usage',
           '--disable-gpu',
           '--disable-software-rasterizer'
         ]
@@ -200,6 +202,9 @@ ipcMain.handle('send-bulk-messages', async (event, { contacts, templates, delayR
   const results = [];
   const totalContacts = contacts.length;
 
+  isPaused = false;
+  isStopped = false;
+
   for (let i = 0; i < contacts.length; i++) {
     const contact = contacts[i];
     
@@ -240,6 +245,48 @@ ipcMain.handle('send-bulk-messages', async (event, { contacts, templates, delayR
           contact[key] || ''
         );
       });
+
+      // Check for stop
+      if (isStopped) {
+        results.push({
+          contact: contact,
+          status: 'stopped',
+          message: 'Sending stopped by user'
+        });
+        mainWindow.webContents.send('message-progress', {
+          current: i + 1,
+          total: totalContacts,
+          contact: contact,
+          status: 'stopped'
+        });
+        break;
+      }
+
+      // Check for pause
+      while (isPaused) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Check for stop
+        if (isStopped) {
+          results.push({
+            contact: contact,
+            status: 'stopped',
+            message: 'Sending stopped by user'
+          });
+          mainWindow.webContents.send('message-progress', {
+            current: i + 1,
+            total: totalContacts,
+            contact: contact,
+            status: 'stopped'
+          });
+          break;
+        }
+      }
+
+      while (!whatsappClient.pupPage || whatsappClient.pupPage.isClosed()) {
+        console.log('No whatsapp connection. Waiting 10 seconds...');
+        await new Promise(resolve => setTimeout(resolve, 10000));
+      }
 
       // Send message
       await whatsappClient.sendMessage(chatId, personalizedMessage);
@@ -389,5 +436,19 @@ async function waitForNetworkConnectivity() {
     console.log('No internet connection. Waiting 10 seconds...');
     await new Promise(resolve => setTimeout(resolve, 10000));
   }
-  console.log('Internet connection restored');
 }
+
+ipcMain.handle('pause-sending', () => {
+  isPaused = true;
+  return true;
+});
+
+ipcMain.handle('resume-sending', () => {
+  isPaused = false;
+  return true;
+});
+
+ipcMain.handle('stop-sending', () => {
+  isStopped = true;
+  return true;
+});

@@ -97,6 +97,24 @@ header p {
     background: #218838;
 }
 
+.btn-info {
+    background: #007bff;
+    color: white;
+}
+
+.btn-info:hover:not(:disabled) {
+    background: #0056b3;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: #b52a37;
+}
+
 .btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
