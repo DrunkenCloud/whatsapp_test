@@ -2,9 +2,8 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs-extra');
 const csv = require('csv-parser');
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
-const { MessageMedia } = require('whatsapp-web.js');
 
 let mainWindow;
 let whatsappClient;
