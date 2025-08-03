@@ -1,6 +1,6 @@
 {
   "name": "whatsapp-bulk-sender-electron",
-  "version": "1.0.0",
+  "version": "1.0.6",
   "description": "WhatsApp Bulk Message Sender with CSV support",
   "main": "main.js",
   "scripts": {
